@@ -81,6 +81,10 @@ async def widget(request: Request):
                     "text": case_type,
                 },
             ],
+            "footer": {
+                "footer_type": "custom_text",
+                "text": "iManage Document",
+            },
             "num_comments": 0,
         },
     }
