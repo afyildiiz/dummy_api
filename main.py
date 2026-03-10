@@ -237,6 +237,64 @@ async def form_submit(request: Request):
 
 
 # ──────────────────────────────────────────────
+#  Asana App Component: Lookup (Typeahead)
+# ──────────────────────────────────────────────
+ALL_ATTACHMENTS = [
+    {"case": case, "att": att}
+    for case in CASES
+    for att in case["attachments"]
+]
+
+
+@app.get("/lookup/typeahead")
+async def lookup_typeahead(request: Request):
+    """Kullanıcı yazarken dosya isimlerini typeahead olarak önerir."""
+    query = request.query_params.get("query", "").lower()
+    fragment = request.query_params.get("fragment", "").lower()
+    search = query or fragment
+
+    results = []
+    for item in ALL_ATTACHMENTS:
+        att = item["att"]
+        case = item["case"]
+        if not search or search in att["name"].lower() or search in case["name"].lower():
+            results.append({
+                "title": att["name"],
+                "subtitle": case["name"],
+                "value": att["id"],
+            })
+
+    return {
+        "header": "Documents",
+        "items": results[:10],
+    }
+
+
+@app.post("/lookup/attach")
+async def lookup_attach(request: Request):
+    """Lookup'tan seçilen dosyayı task'a attach eder."""
+    raw_body = await request.json()
+    body = parse_asana_body(raw_body)
+    query = body.get("query", "")
+    print("LOOKUP ATTACH:", body)
+
+    base = get_base_url(request)
+
+    for item in ALL_ATTACHMENTS:
+        att = item["att"]
+        if att["id"] == query or att["name"] == query or query in att["name"]:
+            return {
+                "resource_name": att["name"],
+                "resource_url": f"{base}/docs/{att['name']}",
+            }
+
+    return JSONResponse(
+        status_code=400,
+        content={"error": "No matching document found."},
+    )
+
+
+# ──────────────────────────────────────────────
 #  Yardımcı REST Endpoint'ler (test / debug)
 # ──────────────────────────────────────────────
 @app.get("/cases")
