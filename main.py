@@ -1,8 +1,20 @@
+import json
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from data import CASES, CASES_BY_ID
+
+
+def parse_asana_body(raw_body: dict) -> dict:
+    """Asana wraps the payload inside a 'data' key as a JSON string."""
+    data = raw_body.get("data")
+    if isinstance(data, str):
+        return json.loads(data)
+    if isinstance(data, dict):
+        return data
+    return raw_body
 
 
 def get_base_url(request: Request) -> str:
@@ -109,10 +121,11 @@ async def form_metadata(request: Request):
 async def form_on_change(request: Request):
     """Case seçimi değiştiğinde attachment listesini döner."""
     base = get_base_url(request)
-    body = await request.json()
+    raw_body = await request.json()
+    body = parse_asana_body(raw_body)
     changed_field = body.get("changed_field", "")
     values = body.get("values", {})
-    print("ON_CHANGE body:", body)
+    print("ON_CHANGE parsed:", body)
 
     case_options = [
         {"id": c["id"], "label": c["name"]}
@@ -179,7 +192,8 @@ async def form_on_change(request: Request):
 @app.post("/form/submit")
 async def form_submit(request: Request):
     """Seçilen case + attachment bilgisini onaylar ve resource attach eder."""
-    body = await request.json()
+    raw_body = await request.json()
+    body = parse_asana_body(raw_body)
     values = body.get("values", {})
 
     case_id = values.get("case_id")
