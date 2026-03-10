@@ -1,18 +1,36 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from data import CASES, CASES_BY_ID
 
+
+def get_base_url(request: Request) -> str:
+    """Request'ten public base URL'i çıkarır (cloudflared/proxy uyumlu)."""
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.headers.get("host", ""))
+    return f"{scheme}://{host}"
+
 app = FastAPI(title="Legal Case Management - Asana App Component Middleware")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://app.asana.com"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"\n>>> {request.method} {request.url}")
+    print(f"    Origin: {request.headers.get('origin', 'N/A')}")
+    print(f"    User-Agent: {request.headers.get('user-agent', 'N/A')[:80]}")
+    response: Response = await call_next(request)
+    print(f"<<< {response.status_code}")
+    return response
 
 
 # ──────────────────────────────────────────────
@@ -53,14 +71,14 @@ async def widget():
 #  İlk açılışta case dropdown'ı döner.
 # ──────────────────────────────────────────────
 @app.get("/form")
-async def form_metadata():
+async def form_metadata(request: Request):
     """Modal ilk açıldığında case seçimi sunar."""
+    base = get_base_url(request)
+    print("FORM METADATA QUERY:", request.url)
+    print("BASE URL:", base)
+
     case_options = [
-        {
-            "id": case["id"],
-            "label": case["name"],
-            "icon_url": None,
-        }
+        {"id": case["id"], "label": case["name"]}
         for case in CASES
     ]
 
@@ -68,24 +86,15 @@ async def form_metadata():
         "template": "form_metadata_v0",
         "metadata": {
             "title": "Dosya & Ek Seçimi",
-            "subtitle": "Bir hukuk dosyası seçin, ardından ek belgelerden birini seçin.",
-            "on_change_callback": "/form/on_change",
-            "submit_button_text": "Ekle",
+            "on_change_callback": f"{base}/form/on_change",
             "fields": [
                 {
                     "id": "case_id",
                     "name": "Hukuk Dosyası",
                     "type": "dropdown",
                     "is_required": True,
+                    "is_watched": True,
                     "options": case_options,
-                    "width": "full",
-                },
-                {
-                    "id": "attachment_id",
-                    "name": "Ek Belge",
-                    "type": "dropdown",
-                    "is_required": True,
-                    "options": [],
                     "width": "full",
                 },
             ],
@@ -100,12 +109,14 @@ async def form_metadata():
 @app.post("/form/on_change")
 async def form_on_change(request: Request):
     """Case seçimi değiştiğinde attachment listesini döner."""
+    base = get_base_url(request)
     body = await request.json()
     changed_field = body.get("changed_field", "")
     values = body.get("values", {})
+    print("ON_CHANGE body:", body)
 
     case_options = [
-        {"id": c["id"], "label": c["name"], "icon_url": None}
+        {"id": c["id"], "label": c["name"]}
         for c in CASES
     ]
 
@@ -116,49 +127,53 @@ async def form_on_change(request: Request):
         case = CASES_BY_ID.get(selected_case_id)
         if case:
             attachment_options = [
-                {
-                    "id": att["id"],
-                    "label": att["name"],
-                    "icon_url": None,
-                }
+                {"id": att["id"], "label": att["name"]}
                 for att in case["attachments"]
             ]
 
+    fields = [
+        {
+            "id": "case_id",
+            "name": "Hukuk Dosyası",
+            "type": "dropdown",
+            "is_required": True,
+            "is_watched": True,
+            "options": case_options,
+            "width": "full",
+        },
+    ]
+
+    if attachment_options:
+        fields.append({
+            "id": "attachment_id",
+            "name": "Ek Belge",
+            "type": "dropdown",
+            "is_required": True,
+            "options": attachment_options,
+            "width": "full",
+        })
+
+    metadata = {
+        "title": "Dosya & Ek Seçimi",
+        "on_change_callback": f"{base}/form/on_change",
+        "fields": fields,
+    }
+
+    if attachment_options:
+        metadata["on_submit_callback"] = f"{base}/form/submit"
+
     return {
         "template": "form_metadata_v0",
-        "metadata": {
-            "title": "Dosya & Ek Seçimi",
-            "subtitle": "Bir hukuk dosyası seçin, ardından ek belgelerden birini seçin.",
-            "on_change_callback": "/form/on_change",
-            "submit_button_text": "Ekle",
-            "fields": [
-                {
-                    "id": "case_id",
-                    "name": "Hukuk Dosyası",
-                    "type": "dropdown",
-                    "is_required": True,
-                    "options": case_options,
-                    "width": "full",
-                },
-                {
-                    "id": "attachment_id",
-                    "name": "Ek Belge",
-                    "type": "dropdown",
-                    "is_required": True,
-                    "options": attachment_options,
-                    "width": "full",
-                },
-            ],
-        },
+        "metadata": metadata,
     }
 
 
 # ──────────────────────────────────────────────
-#  Asana App Component: Form Submit
+#  Asana App Component: on_submit callback
 # ──────────────────────────────────────────────
 @app.post("/form/submit")
 async def form_submit(request: Request):
-    """Seçilen case + attachment bilgisini onaylar."""
+    """Seçilen case + attachment bilgisini onaylar ve resource attach eder."""
     body = await request.json()
     values = body.get("values", {})
 
