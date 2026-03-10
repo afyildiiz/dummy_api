@@ -74,13 +74,11 @@ async def widget(request: Request):
                     "name": "Case",
                     "type": "text_with_icon",
                     "text": case_name,
-                    "icon": "briefcase",
                 },
                 {
                     "name": "Type",
                     "type": "text_with_icon",
                     "text": case_type,
-                    "icon": "notebook",
                 },
             ],
             "num_comments": 0,
