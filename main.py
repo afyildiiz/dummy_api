@@ -131,27 +131,33 @@ async def form_on_change(request: Request):
                 for att in case["attachments"]
             ]
 
-    fields = [
-        {
-            "id": "case_id",
-            "name": "Hukuk Dosyası",
-            "type": "dropdown",
-            "is_required": True,
-            "is_watched": True,
-            "options": case_options,
-            "width": "full",
-        },
-    ]
+    case_field = {
+        "id": "case_id",
+        "name": "Hukuk Dosyası",
+        "type": "dropdown",
+        "is_required": True,
+        "is_watched": True,
+        "options": case_options,
+        "width": "full",
+    }
+    if selected_case_id:
+        case_field["value"] = selected_case_id
+
+    fields = [case_field]
 
     if attachment_options:
-        fields.append({
+        attachment_field = {
             "id": "attachment_id",
             "name": "Ek Belge",
             "type": "dropdown",
             "is_required": True,
             "options": attachment_options,
             "width": "full",
-        })
+        }
+        selected_attachment_id = values.get("attachment_id")
+        if selected_attachment_id:
+            attachment_field["value"] = selected_attachment_id
+        fields.append(attachment_field)
 
     metadata = {
         "title": "Dosya & Ek Seçimi",
