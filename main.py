@@ -49,28 +49,38 @@ async def log_requests(request: Request, call_next):
 #  Asana App Component: Entry Point (Widget)
 # ──────────────────────────────────────────────
 @app.get("/widget")
-async def widget():
-    """Asana widget entry-point – sidebar'da gösterilen özet kart."""
+async def widget(request: Request):
+    """Asana widget – attach edilen resource'un bilgilerini gösterir."""
+    resource_url = request.query_params.get("resource_url", "")
+    filename = resource_url.rsplit("/", 1)[-1] if resource_url else "Unknown"
+
+    case_name = "Unknown Case"
+    case_type = ""
+    for case in CASES:
+        for att in case["attachments"]:
+            if att["name"] == filename:
+                case_name = case["name"]
+                case_type = case["case_type"]
+                break
+
     return {
         "template": "summary_with_details_v0",
         "metadata": {
-            "title": "Hukuk Dosya Yönetimi",
-            "subtitle": f"{len(CASES)} aktif dosya",
+            "title": filename,
+            "subtitle": case_name,
             "subicon": {"type": "completed"},
             "fields": [
                 {
-                    "name": "Toplam Dosya",
+                    "name": "Case",
                     "type": "text_with_icon",
-                    "text": str(len(CASES)),
+                    "text": case_name,
                     "icon": "briefcase",
                 },
                 {
-                    "name": "Bekleyen Ek",
+                    "name": "Type",
                     "type": "text_with_icon",
-                    "text": str(
-                        sum(len(c["attachments"]) for c in CASES)
-                    ),
-                    "icon": "paperclip",
+                    "text": case_type,
+                    "icon": "notebook",
                 },
             ],
             "num_comments": 0,
