@@ -1,0 +1,85 @@
+CASES = [
+    {
+        "id": "CASE-2024-001",
+        "name": "Yılmaz v. ABC Sigorta A.Ş.",
+        "client": "Mehmet Yılmaz",
+        "case_type": "Sigorta Hukuku",
+        "status": "active",
+        "attachments": [
+            {"id": "att-001", "name": "Dava Dilekçesi - Yılmaz.pdf"},
+            {"id": "att-002", "name": "Sigorta Poliçesi #4478.pdf"},
+            {"id": "att-003", "name": "Hasar Tespit Raporu.pdf"},
+            {"id": "att-004", "name": "Tanık İfadesi - Kaya.docx"},
+        ],
+    },
+    {
+        "id": "CASE-2024-002",
+        "name": "Demir Holding - Birleşme Sözleşmesi",
+        "client": "Demir Holding A.Ş.",
+        "case_type": "Şirketler Hukuku",
+        "status": "active",
+        "attachments": [
+            {"id": "att-005", "name": "Birleşme Protokolü Taslağı.pdf"},
+            {"id": "att-006", "name": "Due Diligence Raporu.pdf"},
+            {"id": "att-007", "name": "Yönetim Kurulu Kararı.pdf"},
+            {"id": "att-008", "name": "SPK Başvuru Evrakları.pdf"},
+            {"id": "att-009", "name": "Mali Tablo Analizi 2024.xlsx"},
+        ],
+    },
+    {
+        "id": "CASE-2024-003",
+        "name": "Aksoy - İş Akdi Fesih Davası",
+        "client": "Ayşe Aksoy",
+        "case_type": "İş Hukuku",
+        "status": "active",
+        "attachments": [
+            {"id": "att-010", "name": "İş Sözleşmesi.pdf"},
+            {"id": "att-011", "name": "Fesih Bildirimi.pdf"},
+            {"id": "att-012", "name": "Bordro Kayıtları 2023-2024.xlsx"},
+            {"id": "att-013", "name": "SGK Hizmet Dökümü.pdf"},
+        ],
+    },
+    {
+        "id": "CASE-2024-004",
+        "name": "Öztürk Ailesi - Miras Paylaşım Davası",
+        "client": "Fatma Öztürk",
+        "case_type": "Miras Hukuku",
+        "status": "pending",
+        "attachments": [
+            {"id": "att-014", "name": "Veraset İlamı.pdf"},
+            {"id": "att-015", "name": "Tapu Kayıtları - Kadıköy.pdf"},
+            {"id": "att-016", "name": "Vasiyetname Sureti.pdf"},
+            {"id": "att-017", "name": "Gayrimenkul Değerleme Raporu.pdf"},
+            {"id": "att-018", "name": "Mirasçı Listesi ve Payları.docx"},
+        ],
+    },
+    {
+        "id": "CASE-2024-005",
+        "name": "TechSoft Ltd. - Patent İhlali",
+        "client": "TechSoft Yazılım Ltd. Şti.",
+        "case_type": "Fikri Mülkiyet Hukuku",
+        "status": "active",
+        "attachments": [
+            {"id": "att-019", "name": "Patent Tescil Belgesi TR-2021-04892.pdf"},
+            {"id": "att-020", "name": "İhlal Tespit Raporu.pdf"},
+            {"id": "att-021", "name": "Teknik Bilirkişi Raporu.pdf"},
+            {"id": "att-022", "name": "Karşı Taraf Ürün Analizi.pdf"},
+        ],
+    },
+    {
+        "id": "CASE-2024-006",
+        "name": "Çelik İnşaat - İmar Planı İtirazı",
+        "client": "Çelik İnşaat Taahhüt A.Ş.",
+        "case_type": "İdare Hukuku",
+        "status": "active",
+        "attachments": [
+            {"id": "att-023", "name": "İmar Planı Değişikliği Kararı.pdf"},
+            {"id": "att-024", "name": "İtiraz Dilekçesi.pdf"},
+            {"id": "att-025", "name": "Çevresel Etki Değerlendirme Raporu.pdf"},
+            {"id": "att-026", "name": "Belediye Meclis Kararı.pdf"},
+            {"id": "att-027", "name": "Arsa Tapu Senedi.pdf"},
+        ],
+    },
+]
+
+CASES_BY_ID = {case["id"]: case for case in CASES}
