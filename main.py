@@ -3,6 +3,7 @@ import json
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from data import CASES, CASES_BY_ID
 
@@ -216,9 +217,10 @@ async def form_submit(request: Request):
             content={"error": "Geçersiz ek belge seçimi."},
         )
 
+    base = get_base_url(request)
     return {
         "resource_name": attachment["name"],
-        "resource_url": f"https://legalcrm.example.com/cases/{case_id}/attachments/{attachment_id}",
+        "resource_url": f"{base}/docs/{attachment['name']}",
     }
 
 
@@ -252,6 +254,8 @@ async def list_attachments(case_id: str):
         )
     return case["attachments"]
 
+
+app.mount("/docs", StaticFiles(directory="docs"), name="docs")
 
 if __name__ == "__main__":
     import uvicorn
