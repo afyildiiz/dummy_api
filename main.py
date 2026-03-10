@@ -109,7 +109,7 @@ async def form_metadata(request: Request):
     return {
         "template": "form_metadata_v0",
         "metadata": {
-            "title": "Dosya & Ek Seçimi",
+            "title": "Link Attachment to Task",
             "on_change_callback": f"{base}/form/on_change",
             "fields": [
                 {
@@ -185,7 +185,7 @@ async def form_on_change(request: Request):
         fields.append(attachment_field)
 
     metadata = {
-        "title": "Dosya & Ek Seçimi",
+        "title": "Link Attachment to Task",
         "on_change_callback": f"{base}/form/on_change",
         "fields": fields,
     }
@@ -216,7 +216,7 @@ async def form_submit(request: Request):
     if not case:
         return JSONResponse(
             status_code=400,
-            content={"error": "Geçersiz dosya seçimi."},
+            content={"error": "Invalid case selection."},
         )
 
     attachment = next(
@@ -226,7 +226,7 @@ async def form_submit(request: Request):
     if not attachment:
         return JSONResponse(
             status_code=400,
-            content={"error": "Geçersiz ek belge seçimi."},
+            content={"error": "Invalid attachment selection."},
         )
 
     base = get_base_url(request)
@@ -248,7 +248,7 @@ ALL_ATTACHMENTS = [
 
 @app.get("/lookup/typeahead")
 async def lookup_typeahead(request: Request):
-    """Kullanıcı yazarken dosya isimlerini typeahead olarak önerir."""
+    """When user types, suggest document names as typeahead."""
     query = request.query_params.get("query", "").lower()
     fragment = request.query_params.get("fragment", "").lower()
     search = query or fragment
@@ -272,7 +272,7 @@ async def lookup_typeahead(request: Request):
 
 @app.post("/lookup/attach")
 async def lookup_attach(request: Request):
-    """Lookup'tan seçilen dosyayı task'a attach eder."""
+    """Attach the selected document to the task from lookup."""
     raw_body = await request.json()
     body = parse_asana_body(raw_body)
     query = body.get("query", "")
@@ -295,11 +295,11 @@ async def lookup_attach(request: Request):
 
 
 # ──────────────────────────────────────────────
-#  Yardımcı REST Endpoint'ler (test / debug)
+#  Helper REST Endpoints (test / debug)
 # ──────────────────────────────────────────────
 @app.get("/cases")
 async def list_cases():
-    """Tüm case'leri listeler."""
+    """List all cases."""
     return [
         {
             "id": c["id"],
@@ -315,12 +315,12 @@ async def list_cases():
 
 @app.get("/cases/{case_id}/attachments")
 async def list_attachments(case_id: str):
-    """Belirli bir case'in attachment'larını döner."""
+    """Return the attachments of a specific case."""
     case = CASES_BY_ID.get(case_id)
     if not case:
         return JSONResponse(
             status_code=404,
-            content={"error": f"'{case_id}' bulunamadı."},
+            content={"error": f"'{case_id}' not found."},
         )
     return case["attachments"]
 
