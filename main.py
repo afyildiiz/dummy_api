@@ -19,7 +19,7 @@ def parse_asana_body(raw_body: dict) -> dict:
 
 
 def get_base_url(request: Request) -> str:
-    """Request'ten public base URL'i çıkarır (cloudflared/proxy uyumlu)."""
+    """Extracts the public base URL from the request (proxy-aware)."""
     scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
     host = request.headers.get("x-forwarded-host", request.headers.get("host", ""))
     return f"{scheme}://{host}"
@@ -50,7 +50,7 @@ async def log_requests(request: Request, call_next):
 # ──────────────────────────────────────────────
 @app.get("/widget")
 async def widget(request: Request):
-    """Asana widget – attach edilen resource'un bilgilerini gösterir."""
+    """Returns widget metadata for an attached resource."""
     resource_url = request.query_params.get("resource_url", "")
     filename = resource_url.rsplit("/", 1)[-1] if resource_url else "Unknown"
 
@@ -92,11 +92,10 @@ async def widget(request: Request):
 
 # ──────────────────────────────────────────────
 #  Asana App Component: Modal Form (GET)
-#  İlk açılışta case dropdown'ı döner.
 # ──────────────────────────────────────────────
 @app.get("/form")
 async def form_metadata(request: Request):
-    """Modal ilk açıldığında case seçimi sunar."""
+    """Returns initial form metadata with case dropdown."""
     base = get_base_url(request)
     print("FORM METADATA QUERY:", request.url)
     print("BASE URL:", base)
@@ -114,7 +113,7 @@ async def form_metadata(request: Request):
             "fields": [
                 {
                     "id": "case_id",
-                    "name": "Hukuk Dosyası",
+                    "name": "Legal Case",
                     "type": "dropdown",
                     "is_required": True,
                     "is_watched": True,
@@ -128,11 +127,10 @@ async def form_metadata(request: Request):
 
 # ──────────────────────────────────────────────
 #  Asana App Component: on_change callback
-#  Case seçilince attachment dropdown'ı günceller.
 # ──────────────────────────────────────────────
 @app.post("/form/on_change")
 async def form_on_change(request: Request):
-    """Case seçimi değiştiğinde attachment listesini döner."""
+    """Returns updated form with attachments when case is selected."""
     base = get_base_url(request)
     raw_body = await request.json()
     body = parse_asana_body(raw_body)
@@ -158,7 +156,7 @@ async def form_on_change(request: Request):
 
     case_field = {
         "id": "case_id",
-        "name": "Hukuk Dosyası",
+        "name": "Legal Case",
         "type": "dropdown",
         "is_required": True,
         "is_watched": True,
@@ -173,7 +171,7 @@ async def form_on_change(request: Request):
     if attachment_options:
         attachment_field = {
             "id": "attachment_id",
-            "name": "Ek Belge",
+            "name": "Attachment",
             "type": "dropdown",
             "is_required": True,
             "options": attachment_options,
@@ -204,7 +202,7 @@ async def form_on_change(request: Request):
 # ──────────────────────────────────────────────
 @app.post("/form/submit")
 async def form_submit(request: Request):
-    """Seçilen case + attachment bilgisini onaylar ve resource attach eder."""
+    """Confirms selected case + attachment and returns resource to attach."""
     raw_body = await request.json()
     body = parse_asana_body(raw_body)
     values = body.get("values", {})
